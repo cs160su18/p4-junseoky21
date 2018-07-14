@@ -23,9 +23,34 @@
     <canvas id="myCanvas" width="750px" height="750px"></canvas>
 </body>
 <script>
+
+    // ================= Utility Starts =====================
+    // Default colors. Access it through get RandCol()
+    var STROKE_COLORS = ["red", "green", "blue"];   
+
     function getRandInt(maxVal) {
         return Math.floor(Math.random() * maxVal);
     }
+    /*
+        The function pops a random color from the list STROKE_COLORS
+        If it runs out of colors, it create a new color randomly
+        @return a random color
+    */
+    function getRandCol() {
+        if (STROKE_COLORS.length == 0) {
+            var r = getRandInt(256);
+            var g = getRandInt(256);
+            var b = getRandInt(256);
+            var colStr = "#" + addZeroHex(r) + addZeroHex(g) + addZeroHex(b);
+            STROKE_COLORS.push(colStr);
+        }
+        var randInd = getRandInt(STROKE_COLORS.length);
+        var distinctCol = STROKE_COLORS[randInd];
+        STROKE_COLORS.splice(randInd, 1);
+        return distinctCol;
+    }
+    // ================= Utility Ends =====================
+
     // setting up the canvas and one paper tool
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
@@ -39,45 +64,36 @@
     
     // Line initialization for this user
     var lPath = new paper.Path();
-    lPath.strokeColor = "black";
+    lColor = getRandCol();
+    lPath.strokeColor = lColor;
     lPath.strokeWidth = 1;
     
     var uid = getRandInt(1000); // Make a user ID for this person
     var lines = {};   // dictionary of path objects
     lines[uid] = lPath;
-
-    var STROKE_COLORS = ["red", "green", "blue"];
-
+ 
+    function sendUserData() {
+        var usrData = {
+            type: "UserData",
+            uid: uid,
+            lColor: lColor
+        }
+        socket.send(JSON.stringify(usrData));
+    }
     socket.onopen = function(ev) {
-        socket.send("Hello Server!");
-        console.log("Connection with server Established")
+        sendUserData();
+        console.log("Connection with server Established");
         proc();
     }
     function addZeroHex(hex){
+        var hexStr = hex.toString(16);
         if (hex < 16) {
-            
+            hexStr = "0" + hexStr;
         }
+        return hexStr;
     }
     
-    /*
-        The function pops a random color from the list STROKE_COLORS
-        If it runs out of colors, it create a new color randomly
-        @return a random color
-    */
-    function getRandCol() {
-        if (STROKE_COLORS.length == 0) {
-            var r = getRandInt(256);
-            var g = getRandInt(256);
-            var b = getRandInt(256);
-            
-            
-            var colStr = "#";
 
-        }
-        var randInd = getRandInt(STROKE_COLORS.length);
-        var distinctCol = STROKE_COLORS[randInd];
-        return distinctCol;
-    }
 
     socket.onmessage = function(ev) {
         // console.log(ev.data);
@@ -88,23 +104,41 @@
             console.log("Error Occured While Parsing in JSON");
             return;
         }
-        switch(data.type) {
+        console.log(data.type);
+        switch(String(data.type)) {
             case "lCoord":
                 if (uid == data.uid) {
                     break;
                 }
-                console.log("Remote user data received");
+                // console.log("Remote user data received");
                 if (!(data.uid in lines)) {
                     console.log("Creating a new line for the new user " + data.uid);
                     lines[data.uid] = new paper.Path();
                     lines[data.uid].strokeWidth = 1;
-                    
-                    STROKE_COLORS.splice(randInd, 1);
-                    lines[data.uid].strokeColor = distinctCol;
-
                 }
                 lines[data.uid].add(new paper.Point(data.x, data.y));
-            break;
+                lines[data.uid].strokeColor = data.lColor;
+                break;
+            case "UserData":
+                // Check if new user has the same color as mine
+                if (data.uid != uid && data.lColor == lColor) {
+                    var changeColor = {
+                        type: "ChangeColor",
+                        uid: data.uid
+                    }
+                    socket.send(JSON.stringify(changeColor));
+                }
+                break;
+            case "ChangeColor":
+                // A user has command you to change color
+                if (uid != data.uid){
+                    break;
+                }
+                lColor = getRandCol();
+                lPath.strokeColor = lColor;
+                console.log("Alright! I am changing to a new color!");
+                sendUserData();
+                break;
         }
     }
     
@@ -118,11 +152,11 @@
                 type: "lCoord",
                 uid: uid,
                 x: ev.point.x,
-                y: ev.point.y
+                y: ev.point.y,
+                lColor: lColor
             }
             socket.send(JSON.stringify(usrData));
         }
-        
     }
 
 
