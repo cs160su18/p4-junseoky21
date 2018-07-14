@@ -23,7 +23,9 @@
     <canvas id="myCanvas" width="750px" height="750px"></canvas>
 </body>
 <script>
-
+    function getRandInt(maxVal) {
+        return Math.floor(Math.random() * maxVal);
+    }
     // setting up the canvas and one paper tool
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
@@ -31,19 +33,81 @@
     
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
-
+    
     var socket = new WebSocket(
         'ws://127.0.0.1:8765/');
     
-    socket.onOpen = function(ev) {
-        socket.send("Hello Server!");
-    }
-    socket.onmessage = function(ev) {
-        console.log(ev.data);
-    }
+    // Line initialization for this user
     var lPath = new paper.Path();
     lPath.strokeColor = "black";
     lPath.strokeWidth = 1;
+    
+    var uid = getRandInt(1000); // Make a user ID for this person
+    var lines = {};   // dictionary of path objects
+    lines[uid] = lPath;
+
+    var STROKE_COLORS = ["red", "green", "blue"];
+
+    socket.onopen = function(ev) {
+        socket.send("Hello Server!");
+        console.log("Connection with server Established")
+        proc();
+    }
+    function addZeroHex(hex){
+        if (hex < 16) {
+            
+        }
+    }
+    
+    /*
+        The function pops a random color from the list STROKE_COLORS
+        If it runs out of colors, it create a new color randomly
+        @return a random color
+    */
+    function getRandCol() {
+        if (STROKE_COLORS.length == 0) {
+            var r = getRandInt(256);
+            var g = getRandInt(256);
+            var b = getRandInt(256);
+            
+            
+            var colStr = "#";
+
+        }
+        var randInd = getRandInt(STROKE_COLORS.length);
+        var distinctCol = STROKE_COLORS[randInd];
+        return distinctCol;
+    }
+
+    socket.onmessage = function(ev) {
+        // console.log(ev.data);
+        var data;
+        try {
+            data = JSON.parse(ev.data);
+        } catch(e) {
+            console.log("Error Occured While Parsing in JSON");
+            return;
+        }
+        switch(data.type) {
+            case "lCoord":
+                if (uid == data.uid) {
+                    break;
+                }
+                console.log("Remote user data received");
+                if (!(data.uid in lines)) {
+                    console.log("Creating a new line for the new user " + data.uid);
+                    lines[data.uid] = new paper.Path();
+                    lines[data.uid].strokeWidth = 1;
+                    
+                    STROKE_COLORS.splice(randInd, 1);
+                    lines[data.uid].strokeColor = distinctCol;
+
+                }
+                lines[data.uid].add(new paper.Point(data.x, data.y));
+            break;
+        }
+    }
+    
     // Drawing functionality
 
     function proc() {
@@ -51,10 +115,12 @@
             // console.log("moved");
             lPath.add(new paper.Point(ev.point));
             var usrData = {
+                type: "lCoord",
+                uid: uid,
                 x: ev.point.x,
                 y: ev.point.y
             }
-            socket.send(usrData);
+            socket.send(JSON.stringify(usrData));
         }
         
     }
