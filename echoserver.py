@@ -24,7 +24,8 @@ async def something(websocket, path):
     # register(websocket) sends user_event() to websocket
     await register(websocket)
     try:
-        # await websocket.send("hi")
+        print ("Launch Successful")
+        await websocket.send("From Server: Hi, Registration was SUCCESSFUL!")
         async for message in websocket:
         	await notify_message(message)
     finally:
