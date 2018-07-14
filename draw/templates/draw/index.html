@@ -60,7 +60,7 @@
     var url = window.location.href;
     
     var socket = new WebSocket(
-        'ws://127.0.0.1:8765/');
+        'ws://192.168.43.176:8765/');
     
     // Line initialization for this user
     var lPath = new paper.Path();
@@ -80,6 +80,16 @@
         }
         socket.send(JSON.stringify(usrData));
     }
+
+    function sendDelLine(uid) {
+        var usrData = {
+            type: "DelLine",
+            uid: uid,
+            lColor: lColor
+        }
+        socket.send(JSON.stringify(usrData));
+    }
+
     socket.onopen = function(ev) {
         sendUserData();
         console.log("Connection with server Established");
@@ -143,6 +153,13 @@
                 console.log("Alright! I am changing to a new color!");
                 sendUserData();
                 break;
+
+            case "DelLine":
+                if (uid == data.uid){
+                    break;
+                }
+                lines[data.uid].removeSegments();
+                break;
         }
     }
     
@@ -165,6 +182,36 @@
         }
     }
 
+
+
+    function handleOrientation(event) {
+        console.log("ORIENTATION!")
+        var x = event.gamma;
+        if (x > 25) {
+            lColor = getRandCol();
+            lines[uid].strokeColor = lColor;
+        }
+    }
+
+    window.addEventListener('deviceorientation', handleOrientation);
+
+    function handleMotion(event) {
+        console.log("MOTION!")
+        var x = event.accelerationIncludingGravity.x;
+        var y = event.accelerationIncludingGravity.y;
+        var z = event.accelerationIncludingGravity.z;
+        if (x + y + z> 20) {
+            for (var key in lines) {
+                if (uid == key) {
+                    lines[key].removeSegments();
+                }
+            }
+
+            sendDelLine(uid);
+        }
+    }
+
+    window.addEventListener('devicemotion', handleMotion);
 
 
 </script>
