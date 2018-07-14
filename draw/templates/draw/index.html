@@ -83,8 +83,8 @@
     socket.onopen = function(ev) {
         sendUserData();
         console.log("Connection with server Established");
-        proc();
     }
+    proc();
     function addZeroHex(hex){
         var hexStr = hex.toString(16);
         if (hex < 16) {
@@ -93,10 +93,14 @@
         return hexStr;
     }
     
-
-
+    var myUrl = window.location.href;
+    
     socket.onmessage = function(ev) {
         // console.log(ev.data);
+        if (myUrl.includes("type=small")) {
+            // To ignore remote user data when in small screen
+            return;    
+        }
         var data;
         try {
             data = JSON.parse(ev.data);
@@ -104,7 +108,7 @@
             console.log("Error Occured While Parsing in JSON");
             return;
         }
-        console.log(data.type);
+        // console.log(data.type);
         switch(String(data.type)) {
             case "lCoord":
                 if (uid == data.uid) {
@@ -155,7 +159,9 @@
                 y: ev.point.y,
                 lColor: lColor
             }
-            socket.send(JSON.stringify(usrData));
+            if (socket.readyState == socket.OPEN) {
+                socket.send(JSON.stringify(usrData));
+            }
         }
     }
 
