@@ -8,7 +8,8 @@ urlpatterns = [
     url(r'^$', views.index, name='index'),
     path('treasure/',views.treasure, name='treasure'),
     path('addtreasure/',views.addtreasure, name='addtreasure'),
-    url(r'^(?P<room_name>[^/]+)/$', views.room, name='room'),
+    path('img/',views.img, name='img'),
+    # url(r'^(?P<room_name>[^/]+)/$', views.room, name='room'),
     # path('draw/treasure', views.treasure, name='treasure'),
 ]
 

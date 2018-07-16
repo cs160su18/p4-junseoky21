@@ -1,9 +1,15 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html>
   <head>
     <title>Treasure Hunt</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'draw/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <script type="text/javascript" src="{% static 'draw/vendor/jquery/jquery-3.3.1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'draw/vendor/paper/paper-full.min.js' %}"></script>
     <meta name="viewport" content="initial-scale=1.0">
-    <meta charset="utf-8">
     <style>
         /* Always set the map height explicitly to define the size of the div
         * element that contains the map. */
@@ -32,7 +38,7 @@
             height: 200px;
             width: 100vw;
         }
-        #picture-area {
+        #photo {
             width: 400px;
             height: 400px; 
             background-color: lightgrey;
@@ -41,34 +47,104 @@
     <script src="{% static 'draw/vendor/js/GlobalConstants.js' %}"></script>
 </head>
 <body>
-    <div>←</div>
-    <div id="picture-area">
-        Picture
-    </div>
-    <button>Take Photo</button>
-    <br>
-    Treasure Name:
-    <br>
-    <input type="text" id="treasure-name">
-    <br>
-    Description:
-    <br>
-    <input type="text" id="treasure-description">
-    <button>
-        Submit
-    </button>
+    <div>← Add Treasure</div>
+    <form action="/draw/addtreasure/" method="post">
+        <video id="photo"></video>
+        <br>
+        <input type="hidden" name="tPicture" id="picture-blob">
+        <button type=button id="take-photo">Take Photo</button>
+        <button type=button id="take-photo-reset">Reset Photo</button>
+        <br>
+        Treasure Name:
+        <br>
+        <input type="text" name="tName" id="treasure-name">
+        <br>
+        Description:
+        <br>
+        <input type="text" name="tDescription" id="treasure-description">
+        <input type="hidden" id='uname-field' name='uname'>
+        <input type="hidden" id='lat-field' name='tLat'>
+        <input type="hidden" id='lng-field' name='tLng'>
+        <input type="submit">
+    </form>
 
     <script>
+        
+        navigator.geolocation.getCurrentPosition(success, showError);
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    console.log("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    console.log("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    console.log("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    console.log("An unknown error occurred.");
+                    break;
+            }
+            alert("Failed to Get Current Location");
+        }
+        function success(pos) {
+            var coord = pos.coords;
+            console.log('Your current position is:');
+            console.log(`Latitude : ${coord.latitude}`);
+            console.log(`Longitude: ${coord.longitude}`);
+            console.log(`More or less ${coord.accuracy} meters.`);
+            var latlng = {
+                lat:coord.latitude,
+                lng:coord.longitude
+            }
+            $('#lat-field').val(coord.latitude);
+            $('#lng-field').val(coord.longitude);
+            return coord;
+        }
+        uname = getCookie("uname");
+        if (uname == null) {
+            uname = prompt("Enter your username");
+            setCookie("uname", uname, 7); // if user name is not set in the cookie create a user name by prompting the user.
+        }
+        $('#uname-field').val(uname);
+        
+        
         tName = $('#treasure-name');
         tDescription = $('#treasure-name');
         tPicture = $('#treasure-name');
-        var toSend = {
-            type:"SetTreasure",
-            name: tName,
-            Description: tDescription,
-            Picture: tPicture
-        };
-        
+
+		var constraints = { audio: false, video: { width: 800, height:800 } }; 
+
+        var video = document.getElementById('photo')
+        navigator.mediaDevices.getUserMedia(constraints)
+		.then(function(mediaStream) {
+		video.srcObject = mediaStream;
+		video.onloadedmetadata = function(e) {
+			video.play();
+            };
+            
+        var reader = new FileReader();
+        reader.onloadend = function() {
+            base64data = reader.result.split(',')[1];                
+            console.log(reader.result.split(',')[1]);
+            // blob = new Blob( base64data, { type: "image/jpeg" } );
+
+            $('#picture-blob').val(base64data);
+        }
+		$('#take-photo').click(function() {
+			const track = mediaStream.getVideoTracks()[0];
+			let imageCapture = new ImageCapture(track);
+			imageCapture.takePhoto().then(function(blob) {
+                var objurl = window.URL.createObjectURL(blob);
+                reader.readAsDataURL(blob); // Convert to base64. By converting it, we may embed it to post method
+                video.pause();
+			});
+        });
+        $('#take-photo-reset').click(function(){
+            video.play();
+        });
+		});
 
     </script>
 </body>
