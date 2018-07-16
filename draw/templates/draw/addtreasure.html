@@ -43,11 +43,18 @@
             height: 400px; 
             background-color: lightgrey;
         }
+        #photo-taken {
+            width: 400px;
+            height: 400px;
+            display: none;
+        }
     </style>
     <script src="{% static 'draw/vendor/js/GlobalConstants.js' %}"></script>
 </head>
 <body>
     <div>← Add Treasure</div>
+    <canvas id="photo-taken">
+    </canvas>
     <form action="/draw/addtreasure/" method="post">
         <video id="photo"></video>
         <br>
@@ -135,17 +142,37 @@
 		$('#take-photo').click(function() {
 			const track = mediaStream.getVideoTracks()[0];
 			let imageCapture = new ImageCapture(track);
-			imageCapture.takePhoto().then(function(blob) {
-                var objurl = window.URL.createObjectURL(blob);
-                reader.readAsDataURL(blob); // Convert to base64. By converting it, we may embed it to post method
+            console.log(imageCapture);
+			imageCapture.grabFrame().then(function(bm) {
+                const canvas = document.querySelector('#photo-taken');
+                var cv = document.getElementById('photo-taken');
+                $('#photo').hide();
+                $('#photo-taken').show();
+                drawCanvas(canvas, bm);
+                cv.toBlob(function(blob) {
+                    var objurl = window.URL.createObjectURL(blob);
+                    reader.readAsDataURL(blob); // Convert to base64. By converting it, we may embed it to post method
+                    
+                })  
                 video.pause();
 			});
         });
         $('#take-photo-reset').click(function(){
+            $('#photo').show();
+            $('#photo-taken').hide();
             video.play();
         });
 		});
-
+        function drawCanvas(canvas, img) {
+            canvas.width = getComputedStyle(canvas).width.split('px')[0];
+            canvas.height = getComputedStyle(canvas).height.split('px')[0];
+            let ratio  = Math.min(canvas.width / img.width, canvas.height / img.height);
+            let x = (canvas.width - img.width * ratio) / 2;
+            let y = (canvas.height - img.height * ratio) / 2;
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
+            x, y, img.width * ratio, img.height * ratio);
+        }
     </script>
 </body>
 </html>
