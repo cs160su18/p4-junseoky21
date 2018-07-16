@@ -1,0 +1,136 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Treasure Hunt</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #leaderboard {
+          width: 15%;
+          max-width: 400px;
+          height: 100%;
+          background-color: #1f1919da;
+          position: fixed;
+          z-index: 2;
+      }
+      #leader-table-heading {
+          font-size: 30px;
+          /* margin-top: 20px */
+          text-align: center;
+      }
+      #leader-table {
+          padding-left: 10px;
+          padding-right: 10px;
+          color: white;
+          font-size: 25px;
+          width: 100%;
+      }
+      .leader-table-row {
+
+      }
+    </style>
+    <script src="{% static 'draw/vendor/js/GlobalConstants.js' %}"></script>
+  </head>
+  <body>
+    <div id="leaderboard">
+        <table id="leader-table">
+            <tr id="leader-table-heading">
+                <td>Leader Board</td>
+            </tr>
+            <tr class="leader-table-row">
+                <td>James</td>
+            </tr>
+        </table>
+    </div>
+    <div id="map"></div>
+    <script>
+        // import("../../static/draw/vendor/js/GlobalConstants.js");
+        var map;
+        var marker;
+        var mapID = document.getElementById('map');
+        // var coord = getLocation();
+        // console.log(coord);
+        var socket = new WebSocket(
+        WEBSOCKET_ADDR);
+
+
+        var getLocation = new Promise(function() {
+            if (navigator.geolocation) {
+                var current = navigator.geolocation.getCurrentPosition(success, showError);
+                console.log(current);
+                return current;
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+
+        function initMap() {
+            map = new google.maps.Map(mapID, {
+                center: {lat: 38, lng: 127},
+                zoom: 18    
+            });
+            getLocation.then(function(coord){
+                // map.lat = coord.latitude;
+                // map.lng = coord.longitude;
+                // console.log(coord);
+            });
+            marker = new google.maps.Marker({
+                position: {lat: 38, lng: 127},
+                map: map,
+                title: "You're Here"
+            })
+        }
+        
+        
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    console.log("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    console.log("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    console.log("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    console.log("An unknown error occurred.");
+                    break;
+            }
+        }
+        function success(pos) {
+            var coord = pos.coords;
+            console.log('Your current position is:');
+            console.log(`Latitude : ${coord.latitude}`);
+            console.log(`Longitude: ${coord.longitude}`);
+            console.log(`More or less ${coord.accuracy} meters.`);
+
+            var latlng = {
+                lat:coord.latitude,
+                lng:coord.longitude
+            }
+            map.setCenter(latlng);
+            marker.setPosition(latlng);
+
+            return coord;
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9njv68P5DEaTEdsG1P4jLwcPlzyZNO94&callback=initMap"
+    async defer></script>
+  </body>
+</html>

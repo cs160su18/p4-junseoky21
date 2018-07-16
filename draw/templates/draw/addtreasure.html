@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Treasure Hunt</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+        /* Always set the map height explicitly to define the size of the div
+        * element that contains the map. */
+        /* Optional: Makes the sample page fill the window. */
+        html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        }
+        #leader-table-heading {
+            font-size: 30px;
+            /* margin-top: 20px */
+            text-align: center;
+        }
+        #leader-table {
+            padding-left: 10px;
+            padding-right: 10px;
+            color: white;
+            font-size: 25px;
+            width: 100%;
+        }
+        .leader-table-row {
+
+        }
+        #treasure-description {
+            height: 200px;
+            width: 100vw;
+        }
+        #picture-area {
+            width: 400px;
+            height: 400px; 
+            background-color: lightgrey;
+        }
+    </style>
+    <script src="{% static 'draw/vendor/js/GlobalConstants.js' %}"></script>
+</head>
+<body>
+    <div>←</div>
+    <div id="picture-area">
+        Picture
+    </div>
+    <button>Take Photo</button>
+    <br>
+    Treasure Name:
+    <br>
+    <input type="text" id="treasure-name">
+    <br>
+    Description:
+    <br>
+    <input type="text" id="treasure-description">
+    <button>
+        Submit
+    </button>
+
+    <script>
+        tName = $('#treasure-name');
+        tDescription = $('#treasure-name');
+        tPicture = $('#treasure-name');
+        var toSend = {
+            type:"SetTreasure",
+            name: tName,
+            Description: tDescription,
+            Picture: tPicture
+        };
+        
+
+    </script>
+</body>
+</html>

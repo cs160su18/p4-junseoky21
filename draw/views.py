@@ -7,6 +7,8 @@ def index(request):
 
 def treasure(request):
     return render(request, 'draw/treasure.html', {})
+def addtreasure(request):
+    return render(request, 'draw/addtreasure.html', {})
 
 def room(request, room_name):
     return render(request, 'draw/room.html', {
