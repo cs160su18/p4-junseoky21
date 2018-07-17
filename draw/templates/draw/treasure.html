@@ -8,7 +8,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'draw/vendor/bootstrap/css/bootstrap.min.css' %}">
     <script type="text/javascript" src="{% static 'draw/vendor/jquery/jquery-3.3.1.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'draw/vendor/paper/paper-full.min.js' %}"></script>
+    <script src="{% static 'draw/vendor/js/util.js' %}"></script>
     <meta name="viewport" content="initial-scale=1.0">
+
     <meta charset="utf-8">
     <style>
       /* Always set the map height explicitly to define the size of the div
@@ -45,11 +47,16 @@
       }
       .leader-table-row {
         position: relative;
-          font-size:10px;
+          font-size:20px;
       }
       .name-col{
         position: relative;
-        width: 100px;   
+        width: 100%;
+        padding-left:10px;   
+      }
+      .small-img {
+          width: 100px;
+          height: 100px;
       }
     </style>
     <script src="{% static 'draw/vendor/js/GlobalConstants.js' %}"></script>
@@ -70,6 +77,32 @@
         var map;
         var marker;
         var mapID = document.getElementById('map');
+
+        // function handlePermission() {
+        //     navigator.permissions.query({name:'geolocation'}).then(function(result) {
+        //         if (result.state == 'granted') {
+        //             report(result.state);
+        //         geoBtn.style.display = 'none';
+        //         } else if (result.state == 'prompt') {
+        //             report(result.state);
+        //         geoBtn.style.display = 'none';
+        //         navigator.geolocation.getCurrentPosition(revealPosition,positionDenied,geoSettings);
+        //         } else if (result.state == 'denied') {
+        //             report(result.state);
+        //         geoBtn.style.display = 'inline';
+        //         }
+        //         result.onchange = function() {
+        //             report(result.state);
+        //         }
+        //     });
+        // }
+
+        // function report(state) {
+        //     console.log('Permission ' + state);
+        // }
+
+        // handlePermission();
+
         function htmlDecode(input){
             var e = document.createElement('div');
             e.innerHTML = input;
@@ -89,21 +122,6 @@
         }
         serverData = htmlDecode('{{ TreasureData }}');
         // console.log(serverData);
-        function USGSOverlay(bounds, image, map) {
-
-            // Initialize all properties.
-            this.bounds_ = bounds;
-            this.image_ = image;
-            this.map_ = map;
-
-            // Define a property to hold the image's div. We'll
-            // actually create this div upon receipt of the onAdd()
-            // method so we'll leave it null for now.
-            this.div_ = null;
-
-            // Explicitly call setMap on this overlay.
-            this.setMap(map);
-        }
         function initMap() {
             map = new google.maps.Map(mapID, {
                 center: {lat: 38, lng: 127},
@@ -124,11 +142,27 @@
                 // // The custom USGSOverlay object contains the USGS image,
                 // // the bounds of the image, and a reference to the map.
                 // overlay = new USGSOverlay(bounds, srcImage, map);
-                new google.maps.Marker({
+                var contentString = '<div id="content">'+
+                    '<h1 id="firstHeading" class="firstHeading">{}</h1>'.format(serverData[i][1]) +
+                    '<div id="bodyContent">'+
+                    "<img class='small-img' src='http://localhost:8000/draw/img/?img={}'>".format(serverData[i][5]) +
+                    '<p>{}</p>'.format(serverData[i][2]) +
+                    '<p>Latitude: {}, Logitude:{} </p>'.format(serverData[i][3], serverData[i][4])+
+                    '</div>'+
+                    '</div>';
+
+                var infowindow = new google.maps.InfoWindow({
+                    content: contentString
+                });
+                var tempMarker = new google.maps.Marker({
                     position: {lat: parseFloat(serverData[i][3]), lng: parseFloat(serverData[i][4])},
                     map: map,
-                    title: "Treasure"
+                    title: "Treasure: " + serverData[i][1]
                 });
+                tempMarker.addListener('click', function() {
+                    infowindow.open(map, tempMarker);
+                });
+            }
             getLocation();
             marker = new google.maps.Marker({
                 position: {lat: 38, lng: 127},
@@ -139,9 +173,6 @@
             // console.log('it works' + new Date());
                 getLocation();
             },3000);
-            
-
-            }
             // google.maps.event.addListener(marker, 'click', function() {window.location.href = marker.url;});
         }
         
@@ -169,7 +200,7 @@
             console.log(`Latitude : ${coord.latitude}`);
             console.log(`Longitude: ${coord.longitude}`);
             console.log(`More or less ${coord.accuracy} meters.`);
-            if (coord.accuracy > 1000) {
+            if (coord.accuracy > 10000) {
                 return;
             }
             var latlng = {
