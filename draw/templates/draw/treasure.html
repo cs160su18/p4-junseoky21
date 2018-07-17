@@ -128,6 +128,8 @@
                 zoom: 18    
             });
             serverData =  JSON.parse(serverData);
+            infowindows = [];
+            tempMarkers = [];
             for (var i = 0; i < serverData.length; i++) {
                 console.log(serverData[i]);
                 $('#leader-table').append("<tr class='leader-table-row'><td class='name-col'>" + serverData[i][0] +"</td><td><a href='http://localhost:8000/draw/img/?img=" + serverData[i][5] + "'>" + serverData[i][1] + "</a></td></tr>");
@@ -154,14 +156,19 @@
                 var infowindow = new google.maps.InfoWindow({
                     content: contentString
                 });
+                infowindows.push(infowindow);
                 var tempMarker = new google.maps.Marker({
                     position: {lat: parseFloat(serverData[i][3]), lng: parseFloat(serverData[i][4])},
                     map: map,
                     title: "Treasure: " + serverData[i][1]
                 });
-                tempMarker.addListener('click', function() {
-                    infowindow.open(map, tempMarker);
-                });
+                tempMarkers.push(tempMarker);
+                google.maps.event.addListener(tempMarker,'click', (function(tempMarker,contentString,infowindow){ 
+                    return function() {
+                        infowindow.setContent(contentString);
+                        infowindow.open(map,tempMarker);
+                    };
+                })(tempMarker,contentString,infowindow));  
             }
             getLocation();
             marker = new google.maps.Marker({
