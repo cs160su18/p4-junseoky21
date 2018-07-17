@@ -1,2 +1,5 @@
 jun	fa	geqgrqwe	37.8760449	-122.2587547	5a4caf29e58c65316cac79606dd2e7848be65f982b6333fe3ad18271df5523b6.jpeg
 jun	newspaper	get your free newspaper	37.8755679	-122.2587356	120e7cc49a2a90cbf4e46fb824ab17065ef302e17414a2e911a59f5b36592d3f.jpeg
+pikachu	parking meter 	come get the whole meter! it it's free	37.8703729	-122.27219819999999	21e5d5d72bd329902a37d3c25058ca2e640135a7a7f2b04811bdeb6c833aa841.jpeg
+pikachu	parking meter 	come get the whole meter! it it's free	37.8703729	-122.27219819999999	1a03dce4bb9fd4a4adf715533ee2b6c98c87718661e334358dc8680b774a9d83.jpeg
+pikachu	parking meter	it's free as long as you can carry it	37.8714429	-122.27224749999999	71bdc56b8433aa70d2b4edbac59b56dfd7da89ad0abcef3665b632e6063b4c02.jpeg
